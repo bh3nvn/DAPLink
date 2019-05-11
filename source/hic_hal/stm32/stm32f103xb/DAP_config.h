@@ -411,10 +411,20 @@ static __forceinline uint32_t PIN_nRESET_IN(void)
 */
 // TODO - sw specific implementation should be created
 
+extern uint8_t swd_write_memory(uint32_t address, uint8_t *data, uint32_t size);
+extern uint8_t swd_init_debug(void);
+
 static __forceinline void     PIN_nRESET_OUT(uint32_t bit)
 {
-    if (bit & 1)
+    if (bit & 1) {        //Add soft-reset for stlink v2
         nRESET_PIN_PORT->BSRR = nRESET_PIN;
+			//Perform a soft reset
+			  swd_init_debug();
+			// 0x05FA0000 = VECTKEY, 0x4 = SYSRESETREQ
+			  uint32_t swd_mem_write_data = 0x05FA0000 | 0x4;
+        swd_write_memory(0xE000ED0C, (uint8_t *) &swd_mem_write_data, 4);
+		}
+		
     else
         nRESET_PIN_PORT->BRR = nRESET_PIN;
 }
